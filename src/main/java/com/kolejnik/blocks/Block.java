@@ -2,7 +2,6 @@ package com.kolejnik.blocks;
 
 public class Block {
     private Brick[] bricks;
-    private String color = "\u001B[47m";
     private int x;
     private int y;
 
@@ -43,10 +42,6 @@ public class Block {
     public void move(int moveX, int moveY) {
         x += moveX;
         y += moveY;
-    }
-
-    public void moveDown() {
-        move(0, 1);
     }
 
     public void rotate(int rotation) {

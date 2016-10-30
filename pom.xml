@@ -15,17 +15,10 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.1stleg</groupId>
             <artifactId>jnativehook</artifactId>
             <version>2.0.2</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -60,5 +53,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

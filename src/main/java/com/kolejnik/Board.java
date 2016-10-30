@@ -3,31 +3,21 @@ package com.kolejnik;
 import com.kolejnik.blocks.Block;
 import com.kolejnik.blocks.Brick;
 
-import java.io.IOException;
-
 public class Board {
-    private int board[][];
+    private int fields[][];
     private final int width;
     private final int height;
+    private BoardPrinter printer;
 
     public static final int EMPTY_FIELD = 0;
     public static final int SOLID_FIELD = 1;
     public static final int MOVING_FIELD = 2;
 
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_RED = "\u001B[41m";
-    private static final String ANSI_GREEN = "\u001B[42m";
-    private static final String ANSI_YELLOW = "\u001B[43m";
-    private static final String ANSI_BLUE = "\u001B[44m";
-    private static final String ANSI_PURPLE = "\u001B[45m";
-    private static final String ANSI_CYAN = "\u001B[46m";
-    private static final String ANSI_WHITE = "\u001B[47m";
-    private static final String ANSI_BLACK = "\u001B[40m";
-
     public Board(int height, int width) {
         this.width = width;
         this.height = height;
-        this.board = new int[height][width];
+        this.fields = new int[height][width];
+        this.printer = new BoardPrinter(this);
     }
 
     public boolean moveBlockLeft(Block block) {
@@ -48,19 +38,23 @@ public class Board {
             block.move(0, 1);
             addBlock(block, MOVING_FIELD);
         }
-        print();
+        printer.print();
     }
 
     public void checkForFullRows() {
-        for (int i = 0; i < board.length; i++) {
+        for (int i = 0; i < fields.length; i++) {
             if (isRowFull(i)) {
                 moveRowsDown(i);
             }
         }
     }
 
+    public void print() {
+        printer.print();
+    }
+
     private boolean isRowFull(int rowNumber) {
-        int[] row = board[rowNumber];
+        int[] row = fields[rowNumber];
         return isRowFull(row);
     }
 
@@ -76,7 +70,7 @@ public class Board {
     private void moveRowsDown(int rowNumber) {
         for (int i = rowNumber; i > 0; i--) {
             for (int j = 0; j < width; j++) {
-                board[i][j] = board[i - 1][j];
+                fields[i][j] = fields[i - 1][j];
             }
         }
     }
@@ -86,7 +80,7 @@ public class Board {
             removeBlock(block);
             block.move(moveX, moveY);
             addBlock(block, MOVING_FIELD);
-            print();
+            printer.print();
             return true;
         }
         return false;
@@ -100,14 +94,13 @@ public class Board {
         rotateBlock(block, 1);
     }
 
-    private void rotateBlock(Block block, int rotation) {
-        removeBlock(block);
-        block.rotate(rotation);
-        if (!canAddBlock(block)) {
-            block.rotate(-rotation);
+    public void addBlock(Block block, int value) {
+        for (Brick brick : block.getBricks()) {
+            if (block.getY() + brick.getY() < 0) {
+                continue;
+            }
+            fields[block.getY() + brick.getY()][block.getX() + brick.getX()] = value;
         }
-        addBlock(block, MOVING_FIELD);
-        print();
     }
 
     public boolean canAddBlock(Block block) {
@@ -123,64 +116,26 @@ public class Board {
         return true;
     }
 
+    public void removeBlock(Block block) {
+        addBlock(block, EMPTY_FIELD);
+    }
+
+    private void rotateBlock(Block block, int rotation) {
+        removeBlock(block);
+        block.rotate(rotation);
+        if (!canAddBlock(block)) {
+            block.rotate(-rotation);
+        }
+        addBlock(block, MOVING_FIELD);
+        printer.print();
+    }
+
     private boolean brickOutOfBoard(Brick brick, int column, int row) {
         return row + brick.getY() >= height
                 || row + brick.getY() < 0
                 || column + brick.getX() >= width
                 || column + brick.getX() < 0
-                || board[row + brick.getY()][column + brick.getX()] == SOLID_FIELD;
-    }
-
-    public void addBlock(Block block, int value) {
-        for (Brick brick : block.getBricks()) {
-            if (block.getY() + brick.getY() < 0) {
-                continue;
-            }
-            board[block.getY() + brick.getY()][block.getX() + brick.getX()] = value;
-        }
-    }
-
-    public void removeBlock(Block block) {
-        addBlock(block, EMPTY_FIELD);
-    }
-
-    public void print() {
-        StringBuilder sb = new StringBuilder();
-        System.out.print("\u001B[H\u001b[2J");
-        System.out.flush();
-        for (int[] line : board) {
-            printLine(line, sb);
-        }
-        for (int i = 0; i < width + 2; i++) {
-            printBrick(sb, ANSI_WHITE);
-        }
-        System.out.println(sb.toString());
-    }
-
-    private void printLine(int[] line, StringBuilder sb) {
-        String color = ANSI_WHITE;
-        if (isRowFull(line)) {
-            color = ANSI_YELLOW;
-        }
-        printBrick(sb, ANSI_WHITE);
-        for (int block : line) {
-            if (block > EMPTY_FIELD) {
-                printBrick(sb, color);
-            } else {
-                printEmpty(sb);
-            }
-        }
-        printBrick(sb, ANSI_WHITE);
-        sb.append("\n");
-    }
-
-    private void printBrick(StringBuilder sb, String color) {
-        //sb.append("[]");
-        sb.append(color + "  " + ANSI_RESET);
-    }
-
-    private void printEmpty(StringBuilder sb) {
-        sb.append("  ");
+                || fields[row + brick.getY()][column + brick.getX()] == SOLID_FIELD;
     }
 
     public int getWidth() {
@@ -189,5 +144,9 @@ public class Board {
 
     public int getHeight() {
         return height;
+    }
+
+    public int[][] getFields() {
+        return fields;
     }
 }
